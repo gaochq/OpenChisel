@@ -50,6 +50,13 @@ namespace chisel
                                      const Transform& extrinsic,
                                      float maxDist);
 
+            /**
+             * [IntegrateDepthScan description]
+             * @param integrator [description]
+             * @param depthImage [上一帧深度图的信息]
+             * @param extrinsic  [相机位姿]
+             * @param camera     [相机模型(内参)]
+             */
             template <class DataType> void IntegrateDepthScan(const ProjectionIntegrator& integrator,
                                                               const std::shared_ptr<const DepthImage<DataType> >& depthImage,
                                                               const Transform& extrinsic,
@@ -57,9 +64,11 @@ namespace chisel
             {
                     printf("CHISEL: Integrating a scan\n");
 
+                    //! Step1: 获取深度图信息
                     DataType minimum, maximum, mean;
                     depthImage->GetStats(minimum, maximum, mean);
 
+                    //! Step2: 构造视锥体
                     Frustum frustum;
                     PinholeCamera cameraCopy = camera;
                     cameraCopy.SetNearPlane(static_cast<float>(minimum));
@@ -67,9 +76,11 @@ namespace chisel
 
                     cameraCopy.SetupFrustum(extrinsic, &frustum);
 
+                    //! Step3: 获取在视锥体内部和视锥体相交的Chunks
                     ChunkIDList chunksIntersecting;
                     chunkManager.GetChunkIDsIntersecting(frustum, &chunksIntersecting);
 
+                    //! Step4: 综合处理视锥体中的各个Chunk
                     std::mutex mutex;
                     ChunkIDList garbageChunks;
                     for(const ChunkID& chunkID : chunksIntersecting)
@@ -77,6 +88,7 @@ namespace chisel
                     {
                         bool chunkNew = false;
 
+                        //! Step4.1 如果该ID对应的Chunk不存在，则创建新的chunk; 若存在则直接提取即可
                         mutex.lock();
                         if (!chunkManager.HasChunk(chunkID))
                         {
@@ -87,6 +99,7 @@ namespace chisel
                         ChunkPtr chunk = chunkManager.GetChunk(chunkID);
                         mutex.unlock();
 
+                        //! Step4.2 判断给Chunk是否需要更新
                         bool needsUpdate = integrator.Integrate(depthImage, camera, extrinsic, chunk.get());
 
                         mutex.lock();

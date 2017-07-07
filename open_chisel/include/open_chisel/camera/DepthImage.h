@@ -88,6 +88,13 @@ namespace chisel
                 return row >= 0 && row < width && col >= 0 && col < height;
             }
 
+            /**
+             * [GetStats 获取深度图中最小、最大和平均深度值]
+             * @param minimum      [最小深度值]
+             * @param maximum      [最大深度值]
+             * @param mean         [平均深度值]
+             * @param invalidValid [判断像素值是否有效]
+             */
             void GetStats(DataType& minimum, DataType& maximum, DataType& mean, DataType invalidValid=0) const
             {
                 int numPixels = width * height;

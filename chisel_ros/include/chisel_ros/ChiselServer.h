@@ -109,6 +109,7 @@ namespace chisel_ros
             void PublishColorPose();
             void PublishDepthFrustum();
             void PublishColorFrustum();
+        
 
             void SubscribeDepthImage(const std::string& depthImageTopic, const std::string& cameraInfoTopic, const std::string& transform);
             void DepthCameraInfoCallback(sensor_msgs::CameraInfoConstPtr cameraInfo);

@@ -34,6 +34,9 @@ namespace chisel
         // TODO Auto-generated constructor stub
     }
 
+    /**
+     * 初始化Chisel和Chunkmanger
+     */
     Chisel::Chisel(const Eigen::Vector3i& chunkSize, float voxelResolution, bool useColor) :
             chunkManager(chunkSize, voxelResolution, useColor)
     {

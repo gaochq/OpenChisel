@@ -39,6 +39,14 @@ namespace chisel
     }
 
     //! 对应论文 III.G 部分，建立视椎体,判断chunk是否与锥体交叉
+    /**
+     * [Frustum::Intersects 判断box与锥体是否相交，只需判断box上在平面法线方向最远的点与平面的距离符号即可
+     *     但是这个地方的话，平面的法线应该是指向锥体内部的啊。
+     * ]
+     * @param  box [description]
+     * @return     [description]
+     * 参考：http://www.txutxi.com/?p=584
+     */
     bool Frustum::Intersects(const AABB& box) const
     {
         //！提取椎体的六个面
@@ -104,8 +112,8 @@ namespace chisel
     }
 
     /**
-     * [Frustum::ComputeBoundingBox 求取box的边界，这个地方和求多边形凸包的想法一致]
-     * @param box [输入的box]
+     * [Frustum::ComputeBoundingBox 将视锥体的8个顶点的坐标值得最大和最小值放入box的最大和最小坐标]
+     * @param box [输出的box]
      */
     void Frustum::ComputeBoundingBox(AABB* box) const
     {

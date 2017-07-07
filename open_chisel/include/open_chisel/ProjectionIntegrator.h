@@ -53,20 +53,31 @@ namespace chisel
             bool IntegratePointCloud(const PointCloud& cloud, const Transform& cameraPose, Chunk* chunk,  const std::vector<size_t>& idx) const;
             bool IntegrateColorPointCloud(const PointCloud& cloud, const Transform& cameraPose, Chunk* chunk,  const std::vector<size_t>& idx) const;
 
+            /**
+             * [Integrate ]
+             * @param  depthImage [深度图]
+             * @param  camera     [相机模型]
+             * @param  cameraPose [相机位姿]
+             * @param  chunk      [需要判断的Chubk]
+             * @return            [该chunk是否需要更新]
+             */
             template<class DataType> bool Integrate(const std::shared_ptr<const DepthImage<DataType> >& depthImage,
                                                     const PinholeCamera& camera,
                                                     const Transform& cameraPose, Chunk* chunk) const
             {
                 assert(chunk != nullptr);
-
+                //! Step1：获取Chunk中包含的voxels个数、分辨率以及Chunk的初始坐标
                 Eigen::Vector3i numVoxels = chunk->GetNumVoxels();
                 float resolution = chunk->GetVoxelResolutionMeters();
                 Vec3 origin = chunk->GetOrigin();
+
+                //! Step2:
                 float diag = 2.0 * sqrt(3.0f) * resolution;
                 Vec3 voxelCenter;
                 bool updated = false;
                 for (size_t i = 0; i < centroids.size(); i++)
                 {
+                    //！Step2.1：将voxel从世界坐标系转到相机坐标系，再转到相机平面上，得到像素点cameraPos，并判断该像素点是否有效
                     voxelCenter = centroids[i] + origin;
                     Vec3 voxelCenterInCamera = cameraPose.linear().transpose() * (voxelCenter - cameraPose.translation());
                     Vec3 cameraPos = camera.ProjectPoint(voxelCenterInCamera);
@@ -74,6 +85,7 @@ namespace chisel
                     if (!camera.IsPointOnImage(cameraPos) || voxelCenterInCamera.z() < 0)
                         continue;
 
+                    //! Step2.2：求取该像素点的深度
                     float voxelDist = voxelCenterInCamera.z();
                     float depth = depthImage->DepthAt((int)cameraPos(1), (int)cameraPos(0)); //depthImage->BilinearInterpolateDepth(cameraPos(0), cameraPos(1));
 
@@ -82,6 +94,7 @@ namespace chisel
                         continue;
                     }
 
+                    //！Step2.3：求取该voxel到物体表面的距离(由截断距离的二次型计算)
                     float truncation = truncator->GetTruncationDistance(depth);
                     float surfaceDist = depth - voxelDist;
 

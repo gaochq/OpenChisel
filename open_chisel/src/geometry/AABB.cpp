@@ -30,6 +30,7 @@ namespace chisel
     }
 
     //! AABB的轴线与世界坐标系对齐，OBB与local(object)的轴线对齐
+    //! 参考：https://en.wikipedia.org/wiki/Minimum_bounding_box#Axis-aligned_minimum_bounding_box
     AABB::AABB(const Vec3& _min, const Vec3& _max) :
             min(_min), max(_max)
     {
@@ -56,7 +57,7 @@ namespace chisel
         //! 点到平面的距离？
         float lastdistance = plane.normal.dot(corners[0]) + plane.distance;
 
-        //! 只有两个点的距离符号不一致，说明平面与box相交
+        //! 只要两个点的距离符号不一致，说明平面与box相交
         for (int i = 1; i < 8; i++)
         {
             float distance = plane.normal.dot(corners[i]) + plane.distance;

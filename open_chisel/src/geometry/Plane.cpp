@@ -66,6 +66,11 @@ namespace chisel
 
     }
 
+    /**
+     * [Plane::GetSignedDistance 点到平面的距离，注意normal是单位正交向量，所以没有分母]
+     * @param  point [description]
+     * @return       [description]
+     */
     float Plane::GetSignedDistance(const Vec3& point) const
     {
         return point.dot(normal) + distance;

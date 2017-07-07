@@ -44,12 +44,18 @@ namespace chisel
 
     }
 
+    //! 初始化Chunk的大小、分辨率及颜色渲染标志位
     ChunkManager::ChunkManager(const Eigen::Vector3i& size, float res, bool color) :
             chunkSize(size), voxelResolutionMeters(res), useColor(color)
     {
         CacheCentroids();
     }
 
+    /**
+     * [ChunkManager::CacheCentroids 计算每个chunk的中心坐标
+     *     统计的是chunk的中心坐标，为什么要使用voxel的半径呢？？？
+     * ]
+     */
     void ChunkManager::CacheCentroids()
     {
         halfVoxel = Vec3(voxelResolutionMeters, voxelResolutionMeters, voxelResolutionMeters) * 0.5f;
@@ -72,6 +78,11 @@ namespace chisel
                             0, 0, 0, 0, 1, 1, 1, 1;
     }
 
+    /**
+     * [ChunkManager::GetChunkIDsIntersecting 通过AABB报销的得大小，计算chunk的ID号]
+     * @param box       [description]
+     * @param chunkList [description]
+     */
     void ChunkManager::GetChunkIDsIntersecting(const AABB& box, ChunkIDList* chunkList)
     {
         assert(chunkList != nullptr);
@@ -92,15 +103,23 @@ namespace chisel
     }
 
 
+    /**
+     * [ChunkManager::RecomputeMesh description]
+     * @param chunkID [要计算chunk的ID号]
+     * @param mutex   [description]
+     */
     void ChunkManager::RecomputeMesh(const ChunkID& chunkID, std::mutex& mutex)
     {
         mutex.lock();
+
+        //! 如果此ID号Chunk不存在，则直接返回
         if (!HasChunk(chunkID))
         {
             mutex.unlock();
             return;
         }
 
+        //! 如果该ID对应的chunk存在，则读取其对应的mesh
         MeshPtr mesh;
         if (!HasMesh(chunkID))
         {
@@ -111,10 +130,10 @@ namespace chisel
             mesh = GetMesh(chunkID);
         }
 
-
         ChunkPtr chunk = GetChunk(chunkID);
         mutex.unlock();
 
+        //! 
         GenerateMesh(chunk, mesh.get());
 
         if(useColor)
@@ -148,6 +167,7 @@ namespace chisel
 
     }
 
+    //! 根据ID号，建立新的chunk
     void ChunkManager::CreateChunk(const ChunkID& id)
     {
         AddChunk(std::allocate_shared<Chunk>(Eigen::aligned_allocator<Chunk>(), id, chunkSize, voxelResolutionMeters, useColor));
@@ -159,10 +179,16 @@ namespace chisel
         chunks.clear();
     }
 
+    /**
+     * [ChunkManager::GetChunkIDsIntersecting 获取在视椎体中所有的Chunk]
+     * @param frustum   [输入的视锥体]
+     * @param chunkList [输出的Chunklist]
+     */
     void ChunkManager::GetChunkIDsIntersecting(const Frustum& frustum, ChunkIDList* chunkList)
     {
         assert(chunkList != nullptr);
 
+        //! 求取视锥体的最大最小坐标
         AABB frustumAABB;
         frustum.ComputeBoundingBox(&frustumAABB);
 
@@ -180,6 +206,8 @@ namespace chisel
                     Vec3 min = Vec3(x * chunkSize(0), y * chunkSize(1), z * chunkSize(2)) * voxelResolutionMeters;
                     Vec3 max = min + chunkSize.cast<float>() * voxelResolutionMeters;
                     AABB chunkBox(min, max);
+
+                    //!  判断该chunk是否被视锥体包含
                     if(frustum.Intersects(chunkBox))
                     {
                         chunkList->push_back(ChunkID(x, y, z));
@@ -345,7 +373,11 @@ namespace chisel
         }
     }
 
-
+    /**
+     * [ChunkManager::GenerateMesh 由chunk生成mesh]
+     * @param chunk [输入的chunk]
+     * @param mesh  [最终得到的mesh]
+     */
     void ChunkManager::GenerateMesh(const ChunkPtr& chunk, Mesh* mesh)
     {
         assert(mesh != nullptr);

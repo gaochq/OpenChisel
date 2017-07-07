@@ -49,6 +49,7 @@ namespace chisel
 
             float GetSignedDistance(const Vec3& point) const;
 
+            //！点到平面的关系，距离小于0在锥体内部，那么法线是朝锥体外部的？？？
             inline IntersectionType ClassifyPoint(const Vec3& point) const
             {
                 float d = GetSignedDistance(point);

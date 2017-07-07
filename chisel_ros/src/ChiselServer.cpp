@@ -182,7 +182,9 @@ namespace chisel_ros
         colorCamera.lastPosePublisher.publish(pose);
     }
 
-
+    /**
+     * 初始化Chisel和chunkManger
+     */
     ChiselServer::ChiselServer(const ros::NodeHandle& nodeHanlde, int chunkSizeX, int chunkSizeY, int chunkSizeZ, float resolution, bool color, FusionMode fusionMode) :
             nh(nodeHanlde), useColor(color), hasNewData(false), isPaused(false), mode(fusionMode), farPlaneDist(0), nearPlaneDist(0)
     {
@@ -201,6 +203,7 @@ namespace chisel_ros
         return true;
     }
 
+    //! 订阅深度图以及深度相机相关的topic
     void ChiselServer::SubscribeDepthImage(const std::string& imageTopic, const std::string& infoTopic, const std::string& transform)
     {
         depthCamera.imageTopic = imageTopic;
@@ -241,7 +244,7 @@ namespace chisel_ros
         colorCamera.gotPose  = true;
     }
 
-    //! 订阅到新的深度图
+    //! 存储上一帧的深度图信息
     void ChiselServer::SetDepthImage(const sensor_msgs::ImageConstPtr& img)
     {
         //! 设定新订阅的深度图的大小
@@ -255,6 +258,7 @@ namespace chisel_ros
         depthCamera.gotImage = true;
     }
 
+    //! 深度图订阅的回调函数
     void ChiselServer::DepthImageCallback(sensor_msgs::ImageConstPtr depthImage)
     {
         if (IsPaused()) return;
@@ -304,6 +308,7 @@ namespace chisel_ros
         depthCamera.gotInfo = true;
     }
 
+    //! 若使用颜色渲染，则需要订阅彩色图和彩色相机相关信息
     void ChiselServer::SubscribeColorImage(const std::string& imageTopic, const std::string& infoTopic, const std::string& transform)
     {
         colorCamera.imageTopic = imageTopic;
@@ -350,6 +355,7 @@ namespace chisel_ros
         colorCamera.lastPose = RosTfToChiselTf(tf);
     }
 
+    //! 使用点云模式，直接使用点云的topic即可
     void ChiselServer::SubscribePointCloud(const std::string& topic)
     {
         pointcloudTopic.cloudTopic = topic;
@@ -410,6 +416,7 @@ namespace chisel_ros
         }
     }
 
+    //! 
     void ChiselServer::SetupProjectionIntegrator(const chisel::Vec4& truncation, uint16_t weight, bool useCarving, float carvingDist)
     {
         projectionIntegrator.SetCentroids(GetChiselMap()->GetChunkManager().GetCentroids());
