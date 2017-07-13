@@ -104,6 +104,7 @@ namespace chisel
                 return GetColorVoxelMutable(GetVoxelID(x, y, z));
             }
 
+            //! 判断该voxel是否包含在chunk之内
             inline bool IsCoordValid(VoxelID idx) const
             {
                 return idx >= 0 && idx < voxels.size();

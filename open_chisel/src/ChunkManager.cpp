@@ -53,7 +53,7 @@ namespace chisel
 
     /**
      * [ChunkManager::CacheCentroids 计算每个chunk的中心坐标
-     *     统计的是chunk的中心坐标，为什么要使用voxel的半径呢？？？
+     *     统计的是chunk中个voxel的中心坐标
      * ]
      */
     void ChunkManager::CacheCentroids()
@@ -276,17 +276,18 @@ namespace chisel
      * @param index         [voxel对应的ID号]
      * @param coords        [voxel对应的中心坐标]
      * @param nextMeshIndex [下一块mesh的ID]
-     * @param mesh          [要生成的mesh]
+     * @param mesh          [要生成的triangle mesh segment]
      */
     void ChunkManager::ExtractInsideVoxelMesh(const ChunkPtr& chunk, const Eigen::Vector3i& index, const Vec3& coords, VertIndex* nextMeshIndex, Mesh* mesh)
     {
         assert(mesh != nullptr);
+        //! voxel的8个顶点距voxel左下角顶点的距离
         Eigen::Matrix<float, 3, 8> cubeCoordOffsets = cubeIndexOffsets.cast<float>() * voxelResolutionMeters;
         Eigen::Matrix<float, 3, 8> cornerCoords;
         Eigen::Matrix<float, 8, 1> cornerSDF;
         bool allNeighborsObserved = true;
 
-        //! 一次判断该voxel的8个顶点
+        //! 一次判断该voxel的8个顶点都是否可观测(权重是否大于0)
         for (int i = 0; i < 8; ++i)
         {
             Eigen::Vector3i corner_index = index + cubeIndexOffsets.col(i);
@@ -313,18 +314,36 @@ namespace chisel
         }
     }
 
+    /**
+     * @Author      Buyi
+     * @DateTime    2017-07-13
+     * @version     [version]
+     * @function    [ExtractBorderVoxelMesh]
+     * @description []
+     * @param       chunk         [要计算mesh segment的chunk]
+     * @param       index         [voxel对应的ID号]
+     * @param       coordinates   [voxel的中心坐标]
+     * @param       nextMeshIndex [下一篇mesh的ID号]
+     * @param       mesh          [要计算的mesh segment]
+     */
     void ChunkManager::ExtractBorderVoxelMesh(const ChunkPtr& chunk, const Eigen::Vector3i& index, const Eigen::Vector3f& coordinates, VertIndex* nextMeshIndex, Mesh* mesh)
     {
+        //! voxel的8个顶点距voxel左下角顶点的距离
         const Eigen::Matrix<float, 3, 8> cubeCoordOffsets = cubeIndexOffsets.cast<float>() * voxelResolutionMeters;
         Eigen::Matrix<float, 3, 8> cornerCoords;
         Eigen::Matrix<float, 8, 1> cornerSDF;
         bool allNeighborsObserved = true;
+
+
         for (int i = 0; i < 8; ++i)
         {
+            //! 获取8个相邻的voxel的ID号
             Eigen::Vector3i cornerIDX = index + cubeIndexOffsets.col(i);
 
+            //！ 判断该voxel是否包含在chunk之内
             if (chunk->IsCoordValid(cornerIDX.x(), cornerIDX.y(), cornerIDX.z()))
             {
+                //! 获取该ID号，对应的voxel
                 const DistVoxel& thisVoxel = chunk->GetDistVoxel(cornerIDX.x(), cornerIDX.y(), cornerIDX.z());
                 // Do not extract a mesh here if one of the corners is unobserved
                 // and outside the truncation region.
@@ -333,6 +352,8 @@ namespace chisel
                     allNeighborsObserved = false;
                     break;
                 }
+
+                //! 获取相邻8个voxel的坐标和距离值
                 cornerCoords.col(i) = coordinates + cubeCoordOffsets.col(i);
                 cornerSDF(i) = thisVoxel.GetSDF();
             }
@@ -396,7 +417,7 @@ namespace chisel
     /**
      * [ChunkManager::GenerateMesh 由chunk生成mesh]
      * @param chunk [输入的chunk]
-     * @param mesh  [该chunk对应的mesh片]
+     * @param mesh  [该chunk对应的mesh segment]
      */
     void ChunkManager::GenerateMesh(const ChunkPtr& chunk, Mesh* mesh)
     {
@@ -413,13 +434,14 @@ namespace chisel
         VertIndex nextIndex = 0;
 
         // For voxels not bordering the outside, we can use a more efficient function.
-        //! 提取出以chunk为中心的8个voxel
+        //! 提取出以chunk为中心的8个voxel，并计算chunk对应的mesh segment
         for (index.z() = 0; index.z() < maxZ - 1; index.z()++)
         {
             for (index.y() = 0; index.y() < maxY - 1; index.y()++)
             {
                 for (index.x() = 0; index.x() < maxX - 1; index.x()++)
                 {
+                    //! 获取voxel的ID号
                     i = chunk->GetVoxelID(index.x(), index.y(), index.z());
                     ExtractInsideVoxelMesh(chunk, index, centroids.at(i) + chunk->GetOrigin(), &nextIndex, mesh);
                 }
@@ -427,6 +449,7 @@ namespace chisel
         }
 
         // Max X plane (takes care of max-Y corner as well).
+        //! 由x轴方向最大的面计算chunk的mesh segment
         i = 0;
         index.x() = maxX - 1;
         for (index.z() = 0; index.z() < maxZ - 1; index.z()++)

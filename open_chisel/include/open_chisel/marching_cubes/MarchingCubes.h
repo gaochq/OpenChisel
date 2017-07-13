@@ -66,11 +66,11 @@ namespace chisel
             }
 
             /**
-             * [MeshCube 生成或重新计算mesh片]
+             * [MeshCube 生成或重新计算triangle mesh segment]
              * @param vertexCoords [以某个voxel为中心的8个voxel的中心坐标]
              * @param vertexSDF    [以某个voxel为中心的8个voxel的包含的距离值]
              * @param nextIDX      [下一片mesh的ID号]
-             * @param mesh         [要计算的mesh片]
+             * @param mesh         [要计算的triangle mesh segment]
              */
             static void MeshCube(const Eigen::Matrix<float, 3, 8>& vertexCoords, const Eigen::Matrix<float, 8, 1>& vertexSDF, VertIndex* nextIDX, Mesh* mesh)
             {
@@ -83,9 +83,11 @@ namespace chisel
                 Eigen::Matrix<float, 3, 12> edge_vertex_coordinates;
                 InterpolateEdgeVertices(vertexCoords, vertexSDF, &edge_vertex_coordinates);
 
-                //!
+                //! 根据8个相邻voxel的距离符号，查询属于哪一种cube configuration，参见MarchingCubes.cpp
                 const int* table_row = triangleTable[index];
 
+                //! 这个地方是要得到triangle mesh segment？
+                //! 参见论文III-I部分
                 int table_col = 0;
                 while (table_row[table_col] != -1)
                 {
@@ -102,12 +104,14 @@ namespace chisel
                     const Eigen::Vector3f& p1 = mesh->vertices[*nextIDX + 1];
                     const Eigen::Vector3f& p2 = mesh->vertices[*nextIDX + 2];
 
-                    //! 计算由三个顶点构成面的法线，
+                    //! 计算由三个顶点构成面的法线
                     Eigen::Vector3f px = (p1 - p0);
                     Eigen::Vector3f py = (p2 - p0);
                     Eigen::Vector3f n = px.cross(py).normalized();
-                    mesh->normals.push_back(n);
-                    mesh->normals.push_back(n);
+
+                    //！ 为什么这个地方把是3个n换为px，py，n之后没有明显的变化？？
+                    mesh->normals.push_back(px);
+                    mesh->normals.push_back(py);
                     mesh->normals.push_back(n);
                     *nextIDX += 3;
                     table_col += 3;
