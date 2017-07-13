@@ -65,29 +65,44 @@ namespace chisel
                 }
             }
 
+            /**
+             * [MeshCube 生成或重新计算mesh片]
+             * @param vertexCoords [以某个voxel为中心的8个voxel的中心坐标]
+             * @param vertexSDF    [以某个voxel为中心的8个voxel的包含的距离值]
+             * @param nextIDX      [下一片mesh的ID号]
+             * @param mesh         [要计算的mesh片]
+             */
             static void MeshCube(const Eigen::Matrix<float, 3, 8>& vertexCoords, const Eigen::Matrix<float, 8, 1>& vertexSDF, VertIndex* nextIDX, Mesh* mesh)
             {
                 assert(nextIDX != nullptr);
                 assert(mesh != nullptr);
+
+                //! 得到8个距离符号值的编码
                 const int index = CalculateVertexConfiguration(vertexSDF);
 
                 Eigen::Matrix<float, 3, 12> edge_vertex_coordinates;
                 InterpolateEdgeVertices(vertexCoords, vertexSDF, &edge_vertex_coordinates);
 
+                //!
                 const int* table_row = triangleTable[index];
 
                 int table_col = 0;
                 while (table_row[table_col] != -1)
                 {
+                    //! emplace_back的性能要优于push_back，但是emplace_back对构造函数有特殊要求。
                     mesh->vertices.emplace_back(edge_vertex_coordinates.col(table_row[table_col + 2]));
                     mesh->vertices.emplace_back(edge_vertex_coordinates.col(table_row[table_col + 1]));
                     mesh->vertices.emplace_back(edge_vertex_coordinates.col(table_row[table_col]));
+                    
                     mesh->indices.push_back(*nextIDX);
                     mesh->indices.push_back((*nextIDX) + 1);
                     mesh->indices.push_back((*nextIDX) + 2);
+
                     const Eigen::Vector3f& p0 = mesh->vertices[*nextIDX];
                     const Eigen::Vector3f& p1 = mesh->vertices[*nextIDX + 1];
                     const Eigen::Vector3f& p2 = mesh->vertices[*nextIDX + 2];
+
+                    //! 计算由三个顶点构成面的法线，
                     Eigen::Vector3f px = (p1 - p0);
                     Eigen::Vector3f py = (p2 - p0);
                     Eigen::Vector3f n = px.cross(py).normalized();
@@ -99,6 +114,11 @@ namespace chisel
                 }
             }
 
+            /**
+             * [CalculateVertexConfiguration 将8个voxel的距离值符号用0-256代表，看做将8个距离值符号顺序编码]
+             * @param  vertexSDF [输入的8个距离值]
+             * @return           [编码输出]
+             */
             static int CalculateVertexConfiguration(const Eigen::Matrix<float, 8, 1>& vertexSDF)
             {
                 return  (vertexSDF(0) < 0 ? (1<<0) : 0) |
@@ -111,6 +131,12 @@ namespace chisel
                         (vertexSDF(7) < 0 ? (1<<7) : 0);
             }
 
+            /**
+             * [InterpolateEdgeVertices description]
+             * @param vertexCoords [相邻的8个voxel的中心坐标]
+             * @param vertSDF      [相邻的8个voxel包含的距离值]
+             * @param edgeCoords   [要生成的12条边]
+             */
             static void InterpolateEdgeVertices(const Eigen::Matrix<float, 3, 8>& vertexCoords, const Eigen::Matrix<float, 8, 1>& vertSDF, Eigen::Matrix<float, 3, 12>* edgeCoords)
             {
                 assert(edgeCoords != nullptr);
@@ -127,14 +153,26 @@ namespace chisel
 
             // Performs linear interpolation on two cube corners to find the approximate
             // zero crossing (surface) value.
+            /**
+             * [InterpolateVertex 由两个voxel(顶点)的坐标和距离值计算连接这两个顶点(voxel)边的坐标]
+             * @param  vertex1 [顶点1]
+             * @param  vertex2 [顶点2]
+             * @param  sdf1    [距离值1]
+             * @param  sdf2    [距离值2]
+             * @return         [边的坐标]
+             */
             static inline Vec3 InterpolateVertex(const Vec3& vertex1, const Vec3& vertex2, const float& sdf1, const float& sdf2)
             {
                 const float minDiff = 1e-6;
                 const float sdfDiff = sdf1 - sdf2;
+
+                //! 这边的坐标计算是什么逻辑？？？？？
+                //! 如果两个voxel的距离值相等
                 if (fabs(sdfDiff) < minDiff)
                 {
                     return Vec3(vertex1 + 0.5 * vertex2);
                 }
+                //! 如果两个voxel距离值不相等
                 const float t = sdf1 / sdfDiff;
                 return Vec3(vertex1 + t * (vertex2 - vertex1));
             }

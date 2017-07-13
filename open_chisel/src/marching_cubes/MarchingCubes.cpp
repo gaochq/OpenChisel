@@ -26,6 +26,7 @@ namespace chisel
     // Lookup table from the 256 possible cube configurations from
     // CalculateVertexConfigurationIndex() to the 0-5 triplets the give the edges
     // where the triangle vertices lie.
+    //! 对应8个相邻voxel的截断距离值符号的256种组合
     int MarchingCubes::triangleTable[256][16] =
     {
             { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },

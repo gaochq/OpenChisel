@@ -54,6 +54,9 @@ namespace chisel
         meshesToUpdate.clear();
     }
 
+    /**
+     * [Chisel::UpdateMeshes 重新计算需要更新的mesh]
+     */
     void Chisel::UpdateMeshes()
     {
         chunkManager.RecomputeMeshes(meshesToUpdate);

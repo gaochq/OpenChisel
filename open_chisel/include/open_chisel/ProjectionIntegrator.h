@@ -59,7 +59,7 @@ namespace chisel
              * @param  camera     [相机模型]
              * @param  cameraPose [相机位姿]
              * @param  chunk      [需要判断的Chubk]
-             * @return            [该chunk是否需要更新]
+             * @return            [只要chunk中有一个voxel被更新了，则chunk已被更新，返回真值]
              */
             template<class DataType> bool Integrate(const std::shared_ptr<const DepthImage<DataType> >& depthImage,
                                                     const PinholeCamera& camera,
@@ -95,15 +95,23 @@ namespace chisel
                     }
 
                     //！Step2.3：求取该voxel到物体表面的距离(由截断距离的二次型计算)
+                    //           对应论文算法1中第5步
                     float truncation = truncator->GetTruncationDistance(depth);
+
+                    //! Step2.4: 求取截断函数距离值，对应论文算法1中的u
                     float surfaceDist = depth - voxelDist;
 
+                    //! Step2.5: 判断截断函数距离值surfaceDist与截断距离truncation的关系
                     if (fabs(surfaceDist) < truncation + diag)
-                    {
+                    {   
+                        //! 由Chunk中voxel的索引获取voxel
                         DistVoxel& voxel = chunk->GetDistVoxelMutable(i);
                         voxel.Integrate(surfaceDist, 1.0f);
                         updated = true;
                     }
+
+                    //! Step2.6: 判断该voxel是否处于space carving region
+                    //! 对应论文算法1的第7步-->第10步
                     else if (enableVoxelCarving && surfaceDist > truncation + carvingDist)
                     {
                         DistVoxel& voxel = chunk->GetDistVoxelMutable(i);

@@ -83,6 +83,7 @@ namespace chisel
                 return (z * numVoxels(1) + y) * numVoxels(0) + x;
             }
 
+            //! 获取该坐标下的voxel
             inline const DistVoxel& GetDistVoxel(int x, int y, int z) const
             {
                 return GetDistVoxel(GetVoxelID(x, y, z));

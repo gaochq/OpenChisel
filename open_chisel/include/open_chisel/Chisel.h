@@ -51,7 +51,7 @@ namespace chisel
                                      float maxDist);
 
             /**
-             * [IntegrateDepthScan description]
+             * [IntegrateDepthScan 根据当前时刻得到的深度图和相机位姿，对视锥体中的voxel进行更新]
              * @param integrator [description]
              * @param depthImage [上一帧深度图的信息]
              * @param extrinsic  [相机位姿]
@@ -99,9 +99,10 @@ namespace chisel
                         ChunkPtr chunk = chunkManager.GetChunk(chunkID);
                         mutex.unlock();
 
-                        //! Step4.2 判断给Chunk是否需要更新
+                        //! Step4.2 根据深度图和相机位姿根性chunk中的所有voxel，并判断该chunk是否被更新
                         bool needsUpdate = integrator.Integrate(depthImage, camera, extrinsic, chunk.get());
 
+                        //! 若上面的chunk被更新，则将包括其和其对应的上下左右等9个chunk对应的mesh置为需要更新
                         mutex.lock();
                         if (needsUpdate)
                         {
@@ -116,6 +117,8 @@ namespace chisel
                                 }
                             }
                         }
+
+                        //! 如果该chunk不存在，则将其加入到garbageChunks中
                         else if(chunkNew)
                         {
                             garbageChunks.push_back(chunkID);

@@ -426,13 +426,18 @@ namespace chisel_ros
         projectionIntegrator.SetCarvingEnabled(useCarving);
     }
 
+    /**
+     * [ChiselServer::IntegrateLastDepthImage 根据得到的深度图或彩色图以及相机位姿更新视锥中的voxel]
+     */
     void ChiselServer::IntegrateLastDepthImage()
     {
         if (!IsPaused() && depthCamera.gotInfo && depthCamera.gotPose && lastDepthImage.get())
-        {
+        {   
+            //! 根据当前时刻得到的深度图和相机位姿，对视锥体中的voxel进行更新 
             if(useColor)
             {
                 chiselMap->IntegrateDepthScanColor<DepthData, ColorData>(projectionIntegrator,  lastDepthImage, depthCamera.lastPose, depthCamera.cameraModel, lastColorImage, colorCamera.lastPose, colorCamera.cameraModel);
+
             }
             else
             {
@@ -443,6 +448,7 @@ namespace chisel_ros
             PublishLatestChunkBoxes();
             PublishDepthFrustum();
 
+            //! 根据更新mesh
             chiselMap->UpdateMeshes();
             hasNewData = false;
         }

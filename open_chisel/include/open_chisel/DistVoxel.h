@@ -49,16 +49,20 @@ namespace chisel
             inline float GetWeight() const { return weight; }
             inline void SetWeight(const float& w) { weight = w; }
 
+            //! 更新voxel的符号距离函数值和权重，对应论文算法1中的第12和13步
             inline void Integrate(const float& distUpdate, const float& weightUpdate)
             {
                 float oldSDF = GetSDF();
                 float oldWeight = GetWeight();
+                //! 更新SDF，对应算法12步
                 float newDist = (oldWeight * oldSDF + weightUpdate * distUpdate) / (weightUpdate + oldWeight);
                 SetSDF(newDist);
+                //! 更新权重，对应算法13步
                 SetWeight(oldWeight + weightUpdate);
 
             }
 
+            //! 重置voxel
             inline void Carve()
             {
                 //Reset();

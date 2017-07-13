@@ -73,6 +73,7 @@ namespace chisel
             }
         }
 
+        //! 假设voxel的左下角的顶点坐标为(0,0,0),则矩阵的每一列表示一个顶点
         cubeIndexOffsets << 0, 1, 1, 0, 0, 1, 1, 0,
                             0, 0, 1, 1, 0, 0, 1, 1,
                             0, 0, 0, 0, 1, 1, 1, 1;
@@ -105,7 +106,7 @@ namespace chisel
 
     /**
      * [ChunkManager::RecomputeMesh description]
-     * @param chunkID [要计算chunk的ID号]
+     * @param chunkID [要计算chunk的ID号,单个chunk]
      * @param mutex   [description]
      */
     void ChunkManager::RecomputeMesh(const ChunkID& chunkID, std::mutex& mutex)
@@ -149,14 +150,19 @@ namespace chisel
         mutex.unlock();
     }
 
+    /**
+     * [ChunkManager::RecomputeMeshes 重新计算mesh]
+     * @param chunkMeshes [已经更新过的chunk]
+     */
     void ChunkManager::RecomputeMeshes(const ChunkSet& chunkMeshes)
     {
-
+        //! 如果chunkMeshes为空，则直接返回即可
         if (chunkMeshes.empty())
         {
             return;
         }
 
+        //! 根据value判断对应的chunk是否已更新，如果更新则重新计算其对应的mesh即可
         std::mutex mutex;
         for (const std::pair<ChunkID, bool>& chunk : chunkMeshes)
         //parallel_for(chunks.begin(), chunks.end(), [this, &mutex](const ChunkID& chunkID)
@@ -264,6 +270,14 @@ namespace chisel
 
     }
 
+    /**
+     * [ChunkManager::ExtractInsideVoxelMesh 提取voxel内部的mesh]
+     * @param chunk         [包含要提取voxel的chunk]
+     * @param index         [voxel对应的ID号]
+     * @param coords        [voxel对应的中心坐标]
+     * @param nextMeshIndex [下一块mesh的ID]
+     * @param mesh          [要生成的mesh]
+     */
     void ChunkManager::ExtractInsideVoxelMesh(const ChunkPtr& chunk, const Eigen::Vector3i& index, const Vec3& coords, VertIndex* nextMeshIndex, Mesh* mesh)
     {
         assert(mesh != nullptr);
@@ -271,6 +285,8 @@ namespace chisel
         Eigen::Matrix<float, 3, 8> cornerCoords;
         Eigen::Matrix<float, 8, 1> cornerSDF;
         bool allNeighborsObserved = true;
+
+        //! 一次判断该voxel的8个顶点
         for (int i = 0; i < 8; ++i)
         {
             Eigen::Vector3i corner_index = index + cubeIndexOffsets.col(i);
@@ -278,15 +294,19 @@ namespace chisel
 
             // Do not extract a mesh here if one of the corner is unobserved and
             // outside the truncation region.
+            //! 如果这个顶点出的voxel的权重小于0，说明这个顶点不可观测，说明该voxel不能生成mesh，直接返回 
             if (thisVoxel.GetWeight() <= 1e-15)
             {
                 allNeighborsObserved = false;
                 break;
             }
+
+            //! 获取该voxel8个voxel的中心坐标和距离值
             cornerCoords.col(i) = coords + cubeCoordOffsets.col(i);
             cornerSDF(i) = thisVoxel.GetSDF();
         }
 
+        //! 如果所有的8个顶点出的voxel都是可观测的
         if (allNeighborsObserved)
         {
             MarchingCubes::MeshCube(cornerCoords, cornerSDF, nextMeshIndex, mesh);
@@ -376,7 +396,7 @@ namespace chisel
     /**
      * [ChunkManager::GenerateMesh 由chunk生成mesh]
      * @param chunk [输入的chunk]
-     * @param mesh  [最终得到的mesh]
+     * @param mesh  [该chunk对应的mesh片]
      */
     void ChunkManager::GenerateMesh(const ChunkPtr& chunk, Mesh* mesh)
     {
@@ -393,6 +413,7 @@ namespace chisel
         VertIndex nextIndex = 0;
 
         // For voxels not bordering the outside, we can use a more efficient function.
+        //! 提取出以chunk为中心的8个voxel
         for (index.z() = 0; index.z() < maxZ - 1; index.z()++)
         {
             for (index.y() = 0; index.y() < maxY - 1; index.y()++)

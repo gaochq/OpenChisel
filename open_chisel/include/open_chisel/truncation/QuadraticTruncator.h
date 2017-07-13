@@ -41,7 +41,8 @@ namespace chisel
 
             }
 
-
+            //! 通过深度相机的读数，通过二次型计算截断距离
+            //! 对应论文III-D部分，Dynamic Truncation Distance
             float GetTruncationDistance(float reading) const
             {
                 return std::abs(GetQuadraticTerm() * pow(reading, 2) + GetLinearTerm() * reading + GetConstantTerm()) * scalingFactor;
