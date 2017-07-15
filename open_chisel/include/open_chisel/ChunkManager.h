@@ -53,6 +53,8 @@ namespace chisel
     };
 
 
+    //! 使用hash value排序的map，将三维的chunk坐标转为一维的hash value
+    //! 但是这个地方的ChunkPtr为什么没有设置operator==函数在哈希码相同的时候判断元素是否相同呢？？？
     typedef std::unordered_map<ChunkID, ChunkPtr, ChunkHasher> ChunkMap;
     typedef std::unordered_map<ChunkID, bool, ChunkHasher> ChunkSet;
     typedef std::unordered_map<ChunkID, MeshPtr, ChunkHasher> MeshMap;
@@ -137,6 +139,11 @@ namespace chisel
                 }
             }
 
+            /**
+             * [GetIDAt 由坐标获取chunk的ID号]
+             * @param  pos [description]
+             * @return     [description]
+             */
             inline ChunkID GetIDAt(const Vec3& pos) const
             {
                 static const float roundingFactorX = 1.0f / (chunkSize(0) * voxelResolutionMeters);
@@ -175,6 +182,8 @@ namespace chisel
 
             inline const MeshMap& GetAllMeshes() const { return allMeshes; }
             inline MeshMap& GetAllMutableMeshes() { return allMeshes; }
+
+            //! 获取该chunk对应的mesh片，mesh片在存储的时候使用的也是hash结构。
             inline const MeshPtr& GetMesh(const ChunkID& chunkID) const { return allMeshes.at(chunkID); }
             inline MeshPtr& GetMutableMesh(const ChunkID& chunkID) { return allMeshes.at(chunkID); }
             inline bool HasMesh(const ChunkID& chunkID) const { return allMeshes.find(chunkID) != allMeshes.end(); }

@@ -68,6 +68,7 @@ namespace chisel
 
             inline const DistVoxel& GetDistVoxel(const VoxelID& voxelID) const { return voxels.at(voxelID); }
             inline DistVoxel& GetDistVoxelMutable(const VoxelID& voxelID) { return voxels.at(voxelID); }
+
             inline const ColorVoxel& GetColorVoxel(const VoxelID& voxelID) const { return colors.at(voxelID); }
             inline ColorVoxel& GetColorVoxelMutable(const VoxelID& voxelID) { return colors.at(voxelID); }
 

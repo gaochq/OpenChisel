@@ -80,7 +80,7 @@ namespace chisel
     }
 
     /**
-     * [ChunkManager::GetChunkIDsIntersecting 通过AABB报销的得大小，计算chunk的ID号]
+     * [ChunkManager::GetChunkIDsIntersecting 通过AABB box的大小，计算chunk的ID号]
      * @param box       [description]
      * @param chunkList [description]
      */
@@ -134,14 +134,16 @@ namespace chisel
         ChunkPtr chunk = GetChunk(chunkID);
         mutex.unlock();
 
-        //! 
+        //! 生成或重新计算chunk的mesh segment
         GenerateMesh(chunk, mesh.get());
 
+        //! 按照顶点渲染mesh
         if(useColor)
         {
             ColorizeMesh(mesh.get());
         }
 
+        //! 计算mesh的Normal
         ComputeNormalsFromGradients(mesh.get());
 
         mutex.lock();
@@ -167,13 +169,14 @@ namespace chisel
         for (const std::pair<ChunkID, bool>& chunk : chunkMeshes)
         //parallel_for(chunks.begin(), chunks.end(), [this, &mutex](const ChunkID& chunkID)
         {
+            //! 这个地方查询的时候就利用了hash结构的特点，查询的时间复杂度为N(1).
             if (chunk.second)
               this->RecomputeMesh(ChunkID(chunk.first), mutex);
         }
 
     }
 
-    //! 根据ID号，建立新的chunk
+    //! 根据ID号，建立新的chunk,并将其插入到ChunkMap之中
     void ChunkManager::CreateChunk(const ChunkID& id)
     {
         AddChunk(std::allocate_shared<Chunk>(Eigen::aligned_allocator<Chunk>(), id, chunkSize, voxelResolutionMeters, useColor));
@@ -306,7 +309,7 @@ namespace chisel
             cornerCoords.col(i) = coords + cubeCoordOffsets.col(i);
             cornerSDF(i) = thisVoxel.GetSDF();
         }
-
+        
         //! 如果所有的8个顶点出的voxel都是可观测的
         if (allNeighborsObserved)
         {
@@ -315,16 +318,12 @@ namespace chisel
     }
 
     /**
-     * @Author      Buyi
-     * @DateTime    2017-07-13
-     * @version     [version]
-     * @function    [ExtractBorderVoxelMesh]
-     * @description []
-     * @param       chunk         [要计算mesh segment的chunk]
-     * @param       index         [voxel对应的ID号]
-     * @param       coordinates   [voxel的中心坐标]
-     * @param       nextMeshIndex [下一篇mesh的ID号]
-     * @param       mesh          [要计算的mesh segment]
+     * [ChunkManager::ExtractBorderVoxelMesh description]
+     * @param chunk         [要计算mesh segment的chunk]
+     * @param index         [voxel对应的ID号]
+     * @param coordinates   [voxel的中心坐标]
+     * @param nextMeshIndex [下一篇mesh的ID号]
+     * @param mesh          [要计算的mesh segment]
      */
     void ChunkManager::ExtractBorderVoxelMesh(const ChunkPtr& chunk, const Eigen::Vector3i& index, const Eigen::Vector3f& coordinates, VertIndex* nextMeshIndex, Mesh* mesh)
     {
@@ -340,13 +339,14 @@ namespace chisel
             //! 获取8个相邻的voxel的ID号
             Eigen::Vector3i cornerIDX = index + cubeIndexOffsets.col(i);
 
-            //！ 判断该voxel是否包含在chunk之内
+            //！ 如果该voxel包含在chunk之内
             if (chunk->IsCoordValid(cornerIDX.x(), cornerIDX.y(), cornerIDX.z()))
             {
                 //! 获取该ID号，对应的voxel
                 const DistVoxel& thisVoxel = chunk->GetDistVoxel(cornerIDX.x(), cornerIDX.y(), cornerIDX.z());
                 // Do not extract a mesh here if one of the corners is unobserved
                 // and outside the truncation region.
+                //! 如果该voxel观测权重为0，则直接跳出即可 
                 if (thisVoxel.GetWeight() <= 1e-15)
                 {
                     allNeighborsObserved = false;
@@ -357,18 +357,21 @@ namespace chisel
                 cornerCoords.col(i) = coordinates + cubeCoordOffsets.col(i);
                 cornerSDF(i) = thisVoxel.GetSDF();
             }
+            //! 如果该voxel不在chunk之内，因为该中心voxel位于chunk的某个平面上
             else
             {
                 Eigen::Vector3i chunkOffset = Eigen::Vector3i::Zero();
 
-
+                //! 重新计算不在当前chunk的voxel
                 for (int j = 0; j < 3; j++)
                 {
+                    //! 如果voxel的ID号小于0，说明其是上一个chunk的voxel
                     if (cornerIDX(j) < 0)
                     {
                         chunkOffset(j) = -1;
                         cornerIDX(j) = chunkSize(j) - 1;
                     }
+                    //! 如果voxel的ID号大于voxel总数，说明其是上一个chunk的voxel
                     else if(cornerIDX(j) >= chunkSize(j))
                     {
                         chunkOffset(j) = 1;
@@ -376,10 +379,13 @@ namespace chisel
                     }
                 }
 
+                //! 获取相邻包含上面voxel的chunk的ID号
                 ChunkID neighborID = chunkOffset + chunk->GetID();
 
+                //! 如果该chunk存在
                 if (HasChunk(neighborID))
                 {
+                    //! 如果新得到的chunk不包含该voxel，则直接跳出
                     const ChunkPtr& neighborChunk = GetChunk(neighborID);
                     if(!neighborChunk->IsCoordValid(cornerIDX.x(), cornerIDX.y(), cornerIDX.z()))
                     {
@@ -387,6 +393,7 @@ namespace chisel
                         break;
                     }
 
+                    //! 剩下的与上面相同
                     const DistVoxel& thisVoxel = neighborChunk->GetDistVoxel(cornerIDX.x(), cornerIDX.y(), cornerIDX.z());
                     // Do not extract a mesh here if one of the corners is unobserved
                     // and outside the truncation region.
@@ -398,7 +405,8 @@ namespace chisel
                     cornerCoords.col(i) = coordinates + cubeCoordOffsets.col(i);
                     cornerSDF(i) = thisVoxel.GetSDF();
                 }
-                else
+                //! 如果该chunk不存在，则直接跳出即可
+                else0
                 {
                     allNeighborsObserved = false;
                     break;
@@ -434,7 +442,7 @@ namespace chisel
         VertIndex nextIndex = 0;
 
         // For voxels not bordering the outside, we can use a more efficient function.
-        //! 提取出以chunk为中心的8个voxel，并计算chunk对应的mesh segment
+        //! 提取chunk内部所有的voxel，除了轴向坐标最大的几个面，然后计算chunk对应的mesh segment
         for (index.z() = 0; index.z() < maxZ - 1; index.z()++)
         {
             for (index.y() = 0; index.y() < maxY - 1; index.y()++)
@@ -448,6 +456,7 @@ namespace chisel
             }
         }
 
+        //! 这个地方为什么要计算三个轴向坐标最大的面
         // Max X plane (takes care of max-Y corner as well).
         //! 由x轴方向最大的面计算chunk的mesh segment
         i = 0;
@@ -491,14 +500,24 @@ namespace chisel
         assert(mesh->vertices.size() == mesh->indices.size());
     }
 
+    /**
+     * [ChunkManager::GetSDFAndGradient 求取该顶点处的截断距离值和距离值梯度]
+     * @param  pos  [顶点坐标]
+     * @param  dist [距离]
+     * @param  grad [梯度]
+     * @return      [description]
+     */
     bool ChunkManager::GetSDFAndGradient(const Eigen::Vector3f& pos, double* dist, Eigen::Vector3f* grad)
     {
+        //! 求取顶点坐标四舍五入后所在voxel
         Eigen::Vector3f posf = Eigen::Vector3f(std::floor(pos.x() / voxelResolutionMeters) * voxelResolutionMeters + voxelResolutionMeters / 2.0f,
                 std::floor(pos.y() / voxelResolutionMeters) * voxelResolutionMeters + voxelResolutionMeters / 2.0f,
                 std::floor(pos.z() / voxelResolutionMeters) * voxelResolutionMeters + voxelResolutionMeters / 2.0f);
+
         if (!GetSDF(posf, dist)) return false;
         double ddxplus, ddyplus, ddzplus = 0.0;
         double ddxminus, ddyminus, ddzminus = 0.0;
+        //! 求取该voxel的相邻的坐标差值为分辨率的voxel的截断距离值
         if (!GetSDF(posf + Eigen::Vector3f(voxelResolutionMeters, 0, 0), &ddxplus)) return false;
         if (!GetSDF(posf + Eigen::Vector3f(0, voxelResolutionMeters, 0), &ddyplus)) return false;
         if (!GetSDF(posf + Eigen::Vector3f(0, 0, voxelResolutionMeters), &ddzplus)) return false;
@@ -506,11 +525,18 @@ namespace chisel
         if (!GetSDF(posf - Eigen::Vector3f(0, voxelResolutionMeters, 0), &ddyminus)) return false;
         if (!GetSDF(posf - Eigen::Vector3f(0, 0, voxelResolutionMeters), &ddzminus)) return false;
 
+        //! 求取距离的梯度(和求取图像梯度的思路一致)，并做归一化
         *grad = Eigen::Vector3f(ddxplus - ddxminus, ddyplus - ddyminus, ddzplus - ddzminus);
         grad->normalize();
         return true;
     }
 
+    /**
+     * [ChunkManager::GetSDF 求取voxel处的阶段距离值]
+     * @param  posf [voxel所在的坐标]
+     * @param  dist [得到的距离]
+     * @return      [description]
+     */
     bool ChunkManager::GetSDF(const Eigen::Vector3f& posf, double* dist)
     {
         chisel::ChunkPtr chunk = GetChunkAt(posf);
@@ -536,11 +562,18 @@ namespace chisel
         }
     }
 
+    /**
+     * [ChunkManager::InterpolateColor 为mesh的顶点渲染颜色]
+     * @param  colorPos [顶点]
+     * @return          [description]
+     */
     Vec3 ChunkManager::InterpolateColor(const Vec3& colorPos)
     {
+        //! 根据顶点的坐标，计算到顶点坐标的voxel个数
         const float& x = colorPos(0);
         const float& y = colorPos(1);
         const float& z = colorPos(2);
+        //! std::floor,四舍五入取整数
         const int x_0 = static_cast<int>(std::floor(x / voxelResolutionMeters));
         const int y_0 = static_cast<int>(std::floor(y / voxelResolutionMeters));
         const int z_0 = static_cast<int>(std::floor(z / voxelResolutionMeters));
@@ -548,7 +581,7 @@ namespace chisel
         const int y_1 = y_0 + 1;
         const int z_1 = z_0 + 1;
 
-
+        //! 该voxel右上角8领域内的共8个voxel
         const ColorVoxel* v_000 = GetColorVoxel(Vec3(x_0, y_0, z_0));
         const ColorVoxel* v_001 = GetColorVoxel(Vec3(x_0, y_0, z_1));
         const ColorVoxel* v_011 = GetColorVoxel(Vec3(x_0, y_1, z_1));
@@ -558,13 +591,14 @@ namespace chisel
         const ColorVoxel* v_010 = GetColorVoxel(Vec3(x_0, y_1, z_0));
         const ColorVoxel* v_101 = GetColorVoxel(Vec3(x_1, y_0, z_1));
 
+        //! 如果有一个ColorVoxel不存在，则由chunk出发，获取颜色
         if(!v_000 || !v_001 || !v_011 || !v_111 || !v_110 || !v_100 || !v_010 || !v_101)
         {
             const ChunkID& chunkID = GetIDAt(colorPos);
 
             if(!HasChunk(chunkID))
             {
-                return Vec3(0, 0, 0);
+                return Vec3(0,1 0, 0);
             }
             else
             {
@@ -573,9 +607,12 @@ namespace chisel
             }
         }
 
+        //! 坐标减去voxel的个数是什么鬼
         float xd = (x - x_0) / (x_1 - x_0);
         float yd = (y - y_0) / (y_1 - y_0);
         float zd = (z - z_0) / (z_1 - z_0);
+
+        //! 这个权重关系看不懂啊。。。
         float red, green, blue = 0.0f;
         {
             float c_00 = v_000->GetRed() * (1 - xd) + v_100->GetRed() * xd;
@@ -623,12 +660,18 @@ namespace chisel
         else return nullptr;
     }
 
+    /**
+     * [ChunkManager::GetColorVoxel 获取voxel的颜色]
+     * @param  pos [voxel的坐标]
+     * @return     [description]
+     */
     const ColorVoxel* ChunkManager::GetColorVoxel(const Vec3& pos)
     {
         ChunkPtr chunk = GetChunkAt(pos);
 
         if(chunk.get())
         {
+            //! 获取该voxel的ID
             Vec3 rel = (pos - chunk->GetOrigin());
             const VoxelID& id = chunk->GetVoxelID(rel);
             if (id >= 0 && id < chunk->GetTotalNumVoxels())
@@ -643,7 +686,10 @@ namespace chisel
         else return nullptr;
     }
 
-
+    /**
+     * [ChunkManager::ComputeNormalsFromGradients 通过mesh的顶点计算mesh的normal]
+     * @param mesh [输入的mesh片]
+     */
     void ChunkManager::ComputeNormalsFromGradients(Mesh* mesh)
     {
         assert(mesh != nullptr);
@@ -654,6 +700,7 @@ namespace chisel
             const Vec3& vertex = mesh->vertices.at(i);
             if(GetSDFAndGradient(vertex, &dist, &grad))
             {
+                //! grad已经做了归一化，那么这个地方的mag=1？
                 float mag = grad.norm();
                 if(mag> 1e-12)
                 {
@@ -663,14 +710,20 @@ namespace chisel
         }
     }
 
+    /**
+     * [ChunkManager::ColorizeMesh 为mesh渲染颜色]
+     * @param mesh [要渲染的mesh]
+     */
     void ChunkManager::ColorizeMesh(Mesh* mesh)
     {
         assert(mesh != nullptr);
 
+        //! 按照顶点渲染
         mesh->colors.clear();
         mesh->colors.resize(mesh->vertices.size());
         for (size_t i = 0; i < mesh->vertices.size(); i++)
         {
+
             const Vec3& vertex = mesh->vertices.at(i);
             mesh->colors[i] = InterpolateColor(vertex);
         }

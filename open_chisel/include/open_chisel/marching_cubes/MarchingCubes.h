@@ -29,7 +29,10 @@ namespace chisel
 {
 
     typedef std::vector<Mat3x3, Eigen::aligned_allocator<Mat3x3> > TriangleVector;
-    class MarchingCubes
+
+    //! 这部分内容参考：论文，Lorensen W E, Cline H E. Marching cubes: A high resolution 3D surface construction algorithm
+    //! 博客：http://www.cnblogs.com/shushen/p/5542131.html
+    //!       该方法的缺陷：http://users.polytech.unice.fr/~lingrand/MarchingCubes/algo.html
     {
         public:
             static int triangleTable[256][16];
@@ -86,12 +89,12 @@ namespace chisel
                 //! 根据8个相邻voxel的距离符号，查询属于哪一种cube configuration，参见MarchingCubes.cpp
                 const int* table_row = triangleTable[index];
 
-                //! 这个地方是要得到triangle mesh segment？
                 //! 参见论文III-I部分
                 int table_col = 0;
                 while (table_row[table_col] != -1)
                 {
                     //! emplace_back的性能要优于push_back，但是emplace_back对构造函数有特殊要求。
+                    //! 这个地方table_row的非“-1”的值，应该和edge_vertex_coordinates的值能对应上的。
                     mesh->vertices.emplace_back(edge_vertex_coordinates.col(table_row[table_col + 2]));
                     mesh->vertices.emplace_back(edge_vertex_coordinates.col(table_row[table_col + 1]));
                     mesh->vertices.emplace_back(edge_vertex_coordinates.col(table_row[table_col]));
@@ -109,9 +112,9 @@ namespace chisel
                     Eigen::Vector3f py = (p2 - p0);
                     Eigen::Vector3f n = px.cross(py).normalized();
 
-                    //！ 为什么这个地方把是3个n换为px，py，n之后没有明显的变化？？
-                    mesh->normals.push_back(px);
-                    mesh->normals.push_back(py);
+                    //！ 存入mesh面片的法向量,法向量和mesh片顶点是对应的
+                    mesh->normals.push_back(n);
+                    mesh->normals.push_back(n);
                     mesh->normals.push_back(n);
                     *nextIDX += 3;
                     table_col += 3;
@@ -150,6 +153,7 @@ namespace chisel
                     const int edge0 = pairs[0];
                     const int edge1 = pairs[1];
                     // Only interpolate along edges where there is a zero crossing.
+                    //! 如果这两个voxel的距离符号刚好相反
                     if ((vertSDF(edge0) < 0 && vertSDF(edge1) >= 0) || (vertSDF(edge0) >= 0 && vertSDF(edge1) < 0))
                         edgeCoords->col(i) = InterpolateVertex(vertexCoords.col(edge0), vertexCoords.col(edge1), vertSDF(edge0), vertSDF(edge1));
                 }
@@ -170,13 +174,12 @@ namespace chisel
                 const float minDiff = 1e-6;
                 const float sdfDiff = sdf1 - sdf2;
 
-                //! 这边的坐标计算是什么逻辑？？？？？
-                //! 如果两个voxel的距离值相等
+                //! 两个voxel距离值非常接近，但是符号不一致
                 if (fabs(sdfDiff) < minDiff)
                 {
                     return Vec3(vertex1 + 0.5 * vertex2);
                 }
-                //! 如果两个voxel距离值不相等
+                //! 如果两个voxel距离值相差较大
                 const float t = sdf1 / sdfDiff;
                 return Vec3(vertex1 + t * (vertex2 - vertex1));
             }

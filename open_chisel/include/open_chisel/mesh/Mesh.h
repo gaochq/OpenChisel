@@ -50,6 +50,7 @@ namespace chisel
                 indices.clear();
             }
 
+            //! 要计算每个三角网格的顶点，以及三角面的法线
             Vec3List vertices;
             VertIndexList indices;
             Vec3List normals;

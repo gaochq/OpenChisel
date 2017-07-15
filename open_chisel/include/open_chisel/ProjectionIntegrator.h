@@ -112,6 +112,7 @@ namespace chisel
 
                     //! Step2.6: 判断该voxel是否处于space carving region
                     //! 对应论文算法1的第7步-->第10步
+                    //! carvingDist = 0.05，那么当resolution的大小和carvingDist相等时，这部分就是bug。。。
                     else if (enableVoxelCarving && surfaceDist > truncation + carvingDist)
                     {
                         DistVoxel& voxel = chunk->GetDistVoxelMutable(i);

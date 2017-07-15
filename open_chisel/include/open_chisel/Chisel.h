@@ -99,10 +99,10 @@ namespace chisel
                         ChunkPtr chunk = chunkManager.GetChunk(chunkID);
                         mutex.unlock();
 
-                        //! Step4.2 根据深度图和相机位姿根性chunk中的所有voxel，并判断该chunk是否被更新
+                        //! Step4.2 根据深度图和相机位姿更新chunk中的所有voxel，并判断该chunk是否被更新
                         bool needsUpdate = integrator.Integrate(depthImage, camera, extrinsic, chunk.get());
 
-                        //! 若上面的chunk被更新，则将包括其和其对应的上下左右等9个chunk对应的mesh置为需要更新
+                        //! 若上面的chunk被更新，则将包括其和其对应的上下左右等27个chunk对应的mesh置为需要更新
                         mutex.lock();
                         if (needsUpdate)
                         {
