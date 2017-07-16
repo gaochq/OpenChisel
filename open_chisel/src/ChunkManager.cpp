@@ -564,7 +564,7 @@ namespace chisel
 
     /**
      * [ChunkManager::InterpolateColor 为mesh的顶点渲染颜色]
-     * @param  colorPos [顶点]
+     * @param  colorPos [顶点坐标]
      * @return          [description]
      */
     Vec3 ChunkManager::InterpolateColor(const Vec3& colorPos)

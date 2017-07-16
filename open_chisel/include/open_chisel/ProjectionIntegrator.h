@@ -71,7 +71,7 @@ namespace chisel
                 float resolution = chunk->GetVoxelResolutionMeters();
                 Vec3 origin = chunk->GetOrigin();
 
-                //! Step2:
+                //! Step2: 根据论文算法1求取截断距离函数
                 float diag = 2.0 * sqrt(3.0f) * resolution;
                 Vec3 voxelCenter;
                 bool updated = false;
@@ -95,13 +95,13 @@ namespace chisel
                     }
 
                     //！Step2.3：求取该voxel到物体表面的距离(由截断距离的二次型计算)
-                    //           对应论文算法1中第5步
+                    //!          对应论文算法1中第5步
                     float truncation = truncator->GetTruncationDistance(depth);
 
                     //! Step2.4: 求取截断函数距离值，对应论文算法1中的u
                     float surfaceDist = depth - voxelDist;
 
-                    //! Step2.5: 判断截断函数距离值surfaceDist与截断距离truncation的关系
+                    //! Step2.5: 判断该voxel是否处于hit region
                     if (fabs(surfaceDist) < truncation + diag)
                     {   
                         //! 由Chunk中voxel的索引获取voxel
@@ -131,6 +131,7 @@ namespace chisel
             {
                     assert(chunk != nullptr);
 
+                    //! Step1：获取Chunk中包含的voxels个数、分辨率以及Chunk的初始坐标
                     float resolution = chunk->GetVoxelResolutionMeters();
                     Vec3 origin = chunk->GetOrigin();
                     float resolutionDiagonal = 2.0 * sqrt(3.0f) * resolution;
@@ -142,9 +143,11 @@ namespace chisel
                     //    indexes[i] = i;
                     //}
 
+                    //! Step2: 根据论文算法1求取截断距离函数
                     for (size_t i = 0; i < centroids.size(); i++)
                     //parallel_for(indexes.begin(), indexes.end(), [&](const size_t& i)
                     {
+                        //！Step2.1：将voxel从世界坐标系转到相机坐标系，再转到相机平面上，得到像素点cameraPos，并判断该像素点是否有效
                         Color<ColorType> color;
                         Vec3 voxelCenter = centroids[i] + origin;
                         Vec3 voxelCenterInCamera = depthCameraPose.linear().transpose() * (voxelCenter - depthCameraPose.translation());
@@ -155,6 +158,7 @@ namespace chisel
                             continue;
                         }
 
+                        //! Step2.2：求取该像素点的深度
                         float voxelDist = voxelCenterInCamera.z();
                         float depth = depthImage->DepthAt((int)cameraPos(1), (int)cameraPos(0)); //depthImage->BilinearInterpolateDepth(cameraPos(0), cameraPos(1));
 
@@ -163,13 +167,21 @@ namespace chisel
                             continue;
                         }
 
+                        //！Step2.3：求取该voxel到物体表面的距离(由截断距离的二次型计算)
+                        //!           对应论文算法1中第5步
                         float truncation = truncator->GetTruncationDistance(depth);
+
+                        //! Step2.4: 求取截断函数距离值，对应论文算法1中的u
                         float surfaceDist = depth - voxelDist;
 
+                        //! Step2.5: 判断该voxel是否处于hit region
                         if (std::abs(surfaceDist) < truncation + resolutionDiagonal)
                         {
+                            //! 将voxel投影到彩色相机平面上
                             Vec3 voxelCenterInColorCamera = colorCameraPose.linear().transpose() * (voxelCenter - colorCameraPose.translation());
                             Vec3 colorCameraPos = colorCamera.ProjectPoint(voxelCenterInColorCamera);
+
+                            //! 如果该像素点有效
                             if(colorCamera.IsPointOnImage(colorCameraPos))
                             {
                                 ColorVoxel& colorVoxel = chunk->GetColorVoxelMutable(i);
@@ -178,16 +190,23 @@ namespace chisel
                                 {
                                     int r = static_cast<int>(colorCameraPos(1));
                                     int c = static_cast<int>(colorCameraPos(0));
+                                    //！获取(r，c)处像素点的颜色
                                     colorImage->At(r, c, &color);
+                                    
+                                    //! 按照论文III.C 更新voxe颜色
                                     colorVoxel.Integrate(color.red, color.green, color.blue, 1);
                                 }
                             }
 
+                            //! 按照算法1更新voxel的距离和权重
                             DistVoxel& voxel = chunk->GetDistVoxelMutable(i);
                             voxel.Integrate(surfaceDist, weighter->GetWeight(surfaceDist, truncation));
 
                             updated = true;
                         }
+
+                        //! Step2.6: 判断该voxel是否处于space carving region
+                        //! 对应论文算法1的第7步-->第10步
                         else if (enableVoxelCarving && surfaceDist > truncation + carvingDist)
                         {
                             DistVoxel& voxel = chunk->GetDistVoxelMutable(i);

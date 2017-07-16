@@ -62,6 +62,7 @@ namespace chisel
                 weight = value;
             }
 
+            //! 按照论文III.C 更新voxe颜色
             inline void Integrate(const uint8_t& newRed, const uint8_t& newGreen, const uint8_t& newBlue, const uint8_t& weightUpdate)
             {
                 if(weight >= std::numeric_limits<uint8_t>::max() - weightUpdate)

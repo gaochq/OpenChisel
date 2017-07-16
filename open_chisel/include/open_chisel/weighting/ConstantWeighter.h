@@ -40,6 +40,7 @@ namespace chisel
 
             }
 
+            //! 按照论文求取所求距离的权重,这个地方的weight是1
             virtual float GetWeight(float surfaceDist, float truncationDist) const
             {
                 return weight / (2 * truncationDist);
