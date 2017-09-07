@@ -12,7 +12,7 @@ This reference implementation does not include any pose estimation. Therefore **
 ### API Usage
 Check the `chisel_ros` package source for an example of how to use the API. The `ChiselServer` class makes use of the `chisel_ros` API.
 
-###Dependencies
+### Dependencies
 * [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page)
 * C++11
 * [catkin](http://wiki.ros.org/catkin) build system
@@ -20,12 +20,12 @@ Check the `chisel_ros` package source for an example of how to use the API. The 
 Compilation note:
 For speed, it is essential to compile `open_chisel` with optimization. You will need to add the flag `-DCMAKE_BUILD_TYPE=Release` to your `catkin_make` command when building.
 
-##chisel_ros
+## chisel_ros
 `chisel_ros` is a wrapper around `open_chisel` that interfaces with ROS-based depth and color sensors. The main class `chisel_ros` provides is `ChiselServer`, which subscribes to depth images, color images, TF frames, and camera intrinsics.
 
 Note: you will also need to get the messages package, [chisel_msgs](https://github.com/personalrobotics/chisel_msgs) to build this.
 
-###Supported ROS image types:
+### Supported ROS image types:
 **Depth Images**
 * 32 bit floating point mono in meters (`32FC1`)
 * 16 bit unsigned characters in millimeters (`16UC1`)
@@ -35,7 +35,7 @@ Note: you will also need to get the messages package, [chisel_msgs](https://gith
 * `BGRA8`
 * `Mono8`
 
-###Dependencies
+### Dependencies
 * Eigen
 * C++11
 * catkin (`ros-hydro` or `ros-indigo` or higher)
@@ -55,7 +55,7 @@ Unfortunately, PCL 1.7x (the standard PCL included in current versions of ROS) d
 
 If PCL does not gain `c++11` support by default soon, we may just get rid of `c++11` in `OpenChisel` and use `boost` instead.
 
-###Launching chisel_ros Server
+### Launching chisel_ros Server
 
 Once built, the `chisel_ros` server can be launched by using a launch file. There's an example launch file located at `chisel_ros/launch/launch_kinect_local.launch`. Modify the parameters as necessary to connect to your camera and TF frame.
 ```XML
