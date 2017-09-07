@@ -29,7 +29,7 @@ namespace chisel
 {
 
     typedef std::vector<Mat3x3, Eigen::aligned_allocator<Mat3x3> > TriangleVector;
-
+    class MarchingCubes
     //! 这部分内容参考：论文，Lorensen W E, Cline H E. Marching cubes: A high resolution 3D surface construction algorithm
     //! 博客：http://www.cnblogs.com/shushen/p/5542131.html
     //!       该方法的缺陷：http://users.polytech.unice.fr/~lingrand/MarchingCubes/algo.html

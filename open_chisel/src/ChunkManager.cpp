@@ -406,7 +406,7 @@ namespace chisel
                     cornerSDF(i) = thisVoxel.GetSDF();
                 }
                 //! 如果该chunk不存在，则直接跳出即可
-                else0
+                else
                 {
                     allNeighborsObserved = false;
                     break;
@@ -598,7 +598,7 @@ namespace chisel
 
             if(!HasChunk(chunkID))
             {
-                return Vec3(0,1 0, 0);
+                return Vec3(0, 0, 0);
             }
             else
             {

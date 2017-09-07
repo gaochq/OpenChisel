@@ -34,15 +34,7 @@ namespace chisel
     {
 
     }
-    /**
-     * [PinholeCamera::ProjectPoint 将相机坐标系下的点投影到像素平面上]
-     *   |u|        |fx 0  cx| |X|
-     *   |v| = invZ |0  fy cy| |Y|
-     *   |1|        |0  0  0 | |Z|
-     * 
-     * @param  point [description]
-     * @return       [description]
-     */
+
     Vec3 PinholeCamera::ProjectPoint(const Vec3& point) const
     {
         const float& x = point(0);
@@ -52,11 +44,6 @@ namespace chisel
         return Vec3(intrinsics.GetFx() * x * invZ + intrinsics.GetCx(), intrinsics.GetFy() * y * invZ + intrinsics.GetCy(), z);
     }
 
-    /**
-     * [PinholeCamera::UnprojectPoint 根据相机模型进行反投影]
-     * @param  point [description]
-     * @return       [description]
-     */
     Vec3 PinholeCamera::UnprojectPoint(const Vec3& point) const
     {
         const float& u = point(0);
@@ -65,22 +52,12 @@ namespace chisel
         return Vec3(z * ((u - intrinsics.GetCx()) / intrinsics.GetFx()), z * ((v - intrinsics.GetCy()) / intrinsics.GetFy()), z);
     }
 
-    /**
-     * [PinholeCamera::SetupFrustum 求取相机当前时刻的视椎体]
-     * @param view    [相机当前时刻位姿]
-     * @param frustum [要求取的视椎体]
-     */
     void PinholeCamera::SetupFrustum(const Transform& view, Frustum* frustum) const
     {
         assert(frustum != nullptr);
         frustum->SetFromParams(view, nearPlane, farPlane, intrinsics.GetFy(), intrinsics.GetFy(), intrinsics.GetCx(), intrinsics.GetCy(), width, height);
     }
 
-    /**
-     * [PinholeCamera::IsPointOnImage 判断点是否在相机像素平面上]
-     * @param  point [description]
-     * @return       [description]
-     */
     bool PinholeCamera::IsPointOnImage(const Vec3& point) const
     {
         return point(0) >= 0 && point(1) >= 0 && point(0) < width && point(1) < height;
