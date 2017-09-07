@@ -1,9 +1,9 @@
 OpenChisel
 ==========
-___Forked from [here](https://github.com/personalrobotics/OpenChisel),I did some comments on the 'comments' branch. And I plan to do mapping in low dynamic scene with the code.___
+___Forked from [here](https://github.com/personalrobotics/OpenChisel),I did some comments on the 'comments' branch. And I plan to do mapping in low dynamic scene with the code.___       
 An open-source version of the Chisel chunked TSDF library. It contains two packages:
 
-##open_chisel      
+## open_chisel      
 
 `open_chisel` is an implementation of a generic truncated signed distance field ([TSDF](https://graphics.stanford.edu/papers/volrange/volrange.pdf)) 3D mapping library; based on the Chisel mapping framework developed originally for Google's [Project Tango](https://www.google.com/atap/project-tango/). It is a complete re-write of the original mapping system (which is proprietary). `open_chisel` is chunked and spatially hashed [inspired by this work from Neissner et. al](http://www.graphics.stanford.edu/~niessner/niessner2013hashing.html), making it more memory-efficient than fixed-grid mapping approaches, and more performant than octree-based approaches. A technical description of how it works can be found in our [RSS 2015 paper](http://www.roboticsproceedings.org/rss11/p40.pdf).
 
