@@ -25,7 +25,7 @@ namespace chisel
 {
 
     DistVoxel::DistVoxel() :
-            sdf(99999), weight(0)
+            sdf(99999), weight(0), Dynmiac_state(false), Observe_Num(0), Static_sdf(99999), Intensity_last(-1), Intensity_current(-1)
     {
 
     }

@@ -58,8 +58,16 @@ namespace chisel
                 float newDist = (oldWeight * oldSDF + weightUpdate * distUpdate) / (weightUpdate + oldWeight);
                 SetSDF(newDist);
                 //! 更新权重，对应算法13步
-                SetWeight(oldWeight + weightUpdate);
+                SetWeight(oldWeight + weightUpdate+Observe_Num);
+                Observe_Num ++;
+                if(Observe_Num>=30)
+                    Observe_Num = 30;
 
+                if(Observe_Num==1)
+                    Static_sdf = sdf;
+
+                if(weight>0 && sdf>Static_sdf)
+                    Static_sdf = sdf;
             }
 
             //! 重置voxel
@@ -74,10 +82,56 @@ namespace chisel
                 sdf = 99999;
                 weight = 0;
             }
+            /*
+            inline void Set_Dyanmic()
+            {
+                Dynmiac_state = true;
+            }
 
+            inline void Reset_Dynamic()
+            {
+                Dynmiac_state = false;
+            }
+            */
+            inline bool Set_State(bool state)
+            {
+                Dynmiac_state = state;
+            }
+
+            inline bool Get_State()
+            {
+                return Dynmiac_state;
+            }
+
+            inline float Get_ObserveNum()
+            {
+                return weight;
+            }
+
+            inline float Get_StaticSdf()
+            {
+                return Static_sdf;
+            }
+
+            inline void Set_Intesity(const uint8_t& newRed, const uint8_t& newGreen, const uint8_t& newBlue)
+            {
+                double Intensity_diff;
+                Intensity_current = static_cast<double>((newRed*30 + newGreen*50 + newBlue*50)/100);
+                if(Intensity_last < 0)
+                    Intensity_last = Intensity_current;
+
+                if(fabs(Intensity_current - Intensity_last)>50)
+                    Dynmiac_state = true;
+                Intensity_last = Intensity_current;
+            }
         protected:
-           float sdf;
-           float weight;
+            float sdf;
+            float weight;
+            bool Dynmiac_state;
+            float Observe_Num;
+            float Static_sdf;
+            double Intensity_last;
+            double Intensity_current;
     };
 
 } // namespace chisel 

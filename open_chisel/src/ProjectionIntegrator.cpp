@@ -27,7 +27,7 @@ namespace chisel
 {
 
     ProjectionIntegrator::ProjectionIntegrator() :
-        carvingDist(0), enableVoxelCarving(false)
+        carvingDist(0), enableVoxelCarving(true)
     {
         // TODO Auto-generated constructor stub
 

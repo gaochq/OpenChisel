@@ -40,7 +40,7 @@ namespace chisel
     typedef Eigen::Affine3f Transform;
     typedef Eigen::Quaternionf Quaternion;
 
-    // 为了避免eigen中容器使用出错，和std::vector< Point2 > Point2List 含义类似
+    //！ 为了避免eigen中容器使用出错，和std::vector< Point2 > Point2List 含义类似
     typedef std::vector<Point2, Eigen::aligned_allocator<Point2> > Point2List;
     typedef std::vector<Point3, Eigen::aligned_allocator<Point3> > Point3List;
     typedef std::vector<Vec2, Eigen::aligned_allocator<Vec2> > Vec2List;
@@ -50,5 +50,7 @@ namespace chisel
     typedef std::vector<Mat4x4, Eigen::aligned_allocator<Mat4x4> > Mat4List;
     typedef std::vector<Transform, Eigen::aligned_allocator<Transform> > TransformList;
     typedef std::vector<Quaternion, Eigen::aligned_allocator<Quaternion> > QuaternionList;
+
+    //！ Special Matrix
 }
 #endif // GEOMETRY_H_ 

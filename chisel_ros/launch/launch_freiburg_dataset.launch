@@ -16,7 +16,7 @@
         <param name="integration_weight" value="1"/>
         <param name="use_voxel_carving" value="true"/>
         <param name="use_color" value="true"/>
-        <param name="carving_dist_m" value="0.1"/>
+        <param name="carving_dist_m" value="0.05"/>
         <param name="voxel_resolution_m" value="0.01"/>
         <param name="far_plane_dist" value="1.5"/>
         <param name="base_transform" value="/world"/>
@@ -32,3 +32,8 @@
 
     </node>
 </launch>
+        <!--
+                rgbd_dataset_freiburg3_sitting_halfsphere
+                rgbd_dataset_freiburg3_long_office_household.bag">
+
+        -->

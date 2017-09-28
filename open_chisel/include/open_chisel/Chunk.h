@@ -87,6 +87,10 @@ namespace chisel
             //! 获取该坐标下的voxel
             inline const DistVoxel& GetDistVoxel(int x, int y, int z) const
             {
+                assert(x<numVoxels(0));
+                assert(y<numVoxels(1));
+                assert(z<numVoxels(2));
+
                 return GetDistVoxel(GetVoxelID(x, y, z));
             }
 
@@ -124,7 +128,30 @@ namespace chisel
 
             inline const std::vector<ColorVoxel>& GetColorVoxels() const
             {
-                    return colors;
+                return colors;
+            }
+
+            //！ Get id from the position coordinate
+            inline Point3 GetIdfromCoord(const Vec3 position) const
+            {
+                Point3 Voxel_coord;
+                Vec3 HalfVoxel = Vec3(voxelResolutionMeters, voxelResolutionMeters, voxelResolutionMeters) * 0.5f;
+                Vec3 Voxel_pos = (position - HalfVoxel)/voxelResolutionMeters;
+                Voxel_coord << static_cast<int>(Voxel_pos(0)), static_cast<int>(Voxel_pos(1)), static_cast<int>(Voxel_pos(2));
+
+                return Voxel_coord;
+            }
+
+            Chunk &operator=(const Chunk &other)
+            {
+                this->ID = other.ID;
+                this->colors = other.colors;
+                this->numVoxels = other.numVoxels;
+                this->origin = other.origin;
+                this->voxelResolutionMeters = other.voxelResolutionMeters;
+                this->voxels = other.voxels;
+
+                return *this;
             }
 
             void ComputeStatistics(ChunkStatistics* stats);
