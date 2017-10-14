@@ -116,11 +116,11 @@ namespace chisel
             inline void Set_Intesity(const uint8_t& newRed, const uint8_t& newGreen, const uint8_t& newBlue)
             {
                 double Intensity_diff;
-                Intensity_current = static_cast<double>((newRed*30 + newGreen*50 + newBlue*50)/100);
+                Intensity_current = static_cast<double>((newRed*30 + newGreen*59 + newBlue*11)/100);
                 if(Intensity_last < 0)
                     Intensity_last = Intensity_current;
 
-                if(fabs(Intensity_current - Intensity_last)>50)
+                if(fabs(Intensity_current - Intensity_last)>10)
                     Dynmiac_state = true;
                 Intensity_last = Intensity_current;
             }

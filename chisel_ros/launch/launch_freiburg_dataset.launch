@@ -1,7 +1,7 @@
 <launch>
     <machine name="local" address="localhost" default="true"/>
 
-    <node name="Dataset" pkg="rosbag" type="play" output="screen" args="--clock --delay 5 /home/buyi/Personal/TSDF/catkin_ws/src/Datasets/rgbd_dataset_freiburg3_long_office_household.bag">
+    <node name="Dataset" pkg="rosbag" type="play" output="screen" args="--clock --delay 5 /home/buyi/Personal/TSDF/catkin_ws/src/Datasets/rgbd_dataset_freiburg3_sitting_halfsphere.bag">
 
     </node>
 
