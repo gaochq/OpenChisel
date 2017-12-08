@@ -152,7 +152,9 @@ namespace chisel
                         //！Step2.1：将voxel从世界坐标系转到相机坐标系，再转到相机平面上，得到像素点cameraPos，并判断该像素点是否有效
                         Color<ColorType> color;
                         Vec3 voxelCenter = centroids[i] + origin;
+                        //! 转相机坐标系
                         Vec3 voxelCenterInCamera = depthCameraPose.linear().transpose() * (voxelCenter - depthCameraPose.translation());
+                        //! 转图像坐标系
                         Vec3 cameraPos = depthCamera.ProjectPoint(voxelCenterInCamera);
 
                         if (!depthCamera.IsPointOnImage(cameraPos) || voxelCenterInCamera.z() < 0)

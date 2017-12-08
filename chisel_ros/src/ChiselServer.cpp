@@ -209,8 +209,8 @@ namespace chisel_ros
         depthCamera.imageTopic = imageTopic;
         depthCamera.transform = transform;
         depthCamera.infoTopic = infoTopic;
-        depthCamera.imageSubscriber = nh.subscribe(depthCamera.imageTopic, 20, &ChiselServer::DepthImageCallback, this);
-        depthCamera.infoSubscriber = nh.subscribe(depthCamera.infoTopic, 20, &ChiselServer::DepthCameraInfoCallback, this);
+        depthCamera.imageSubscriber = nh.subscribe(depthCamera.imageTopic, 100, &ChiselServer::DepthImageCallback, this);
+        depthCamera.infoSubscriber = nh.subscribe(depthCamera.infoTopic, 100, &ChiselServer::DepthCameraInfoCallback, this);
     }
 
 
