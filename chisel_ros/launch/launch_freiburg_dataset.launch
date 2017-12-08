@@ -33,6 +33,7 @@
     </node>
 </launch>
         <!--
+                rgbd_dataset_freiburg2_desk_with_person
                 rgbd_dataset_freiburg3_sitting_halfsphere
                 rgbd_dataset_freiburg3_long_office_household.bag">
 

@@ -234,7 +234,7 @@ namespace chisel
                                 if(fabs(surfaceDist - voxel.Get_StaticSdf())>0.50)
                                     voxel.Set_State(true);
                                 */
-                                //voxel.Set_Intesity(color1.red, color1.green, color1.blue);
+                                voxel.Set_Intesity(color1.red, color1.green, color1.blue);
                                 voxel.Carve();
                                 updated = true;
                             }
@@ -331,8 +331,8 @@ namespace chisel
 
                     }
                 */
-                    Chunk chunk_tmp = Open_Operation(*chunk, 3);
-                   *chunk = chunk_tmp;
+                    //Chunk chunk_tmp = Open_Operation(*chunk, 3);
+                   //*chunk = chunk_tmp;
 
                     for (size_t i = 0; i < centroids.size(); i++)
 
@@ -342,7 +342,7 @@ namespace chisel
                         {
                             voxel.Reset();
                             ColorVoxel& colorVoxel = chunk->GetColorVoxelMutable(i);
-                            colorVoxel.Integrate(255, 0, 0, 1);
+                            //colorVoxel.Integrate(255, 0, 0, 1);
                         }
 
                     }
