@@ -142,6 +142,7 @@ namespace chisel_ros
         return marker;
     }
 
+    //! 发布深度图位姿
     void ChiselServer::PublishDepthPose()
     {
         chisel::Transform lastPose = depthCamera.lastPose;
@@ -162,6 +163,7 @@ namespace chisel_ros
         depthCamera.lastPosePublisher.publish(pose);
     }
 
+    //! 发布彩色图位姿
     void ChiselServer::PublishColorPose()
     {
         chisel::Transform lastPose = colorCamera.lastPose;

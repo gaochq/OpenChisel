@@ -7,6 +7,7 @@ find_package(cmake_modules REQUIRED)
 find_package(Eigen REQUIRED)
 include_directories(${Eigen_INCLUDE_DIRS})
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++0x")
+SET(CMAKE_BUILD_TYPE Release)
 
 include_directories(include)
 
