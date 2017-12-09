@@ -1,6 +1,6 @@
 OpenChisel
 ==========
-___Forked from [here](https://github.com/personalrobotics/OpenChisel),I did some comments on the 'comments' branch. And I plan to do mapping in low dynamic scene with the code.___       
+___Forked from [here](https://github.com/personalrobotics/OpenChisel),I did some comments on the 'comments' branch. And I plan to do reconstruction in low dynamic scene with the code.___       
 An open-source version of the Chisel chunked TSDF library. It contains two packages:
 
 ## open_chisel      
