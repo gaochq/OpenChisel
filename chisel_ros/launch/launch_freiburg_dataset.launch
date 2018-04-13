@@ -1,7 +1,7 @@
 <launch>
     <machine name="local" address="localhost" default="true"/>
 
-    <node name="Dataset" pkg="rosbag" type="play" output="screen" args="--clock --delay 5 /home/buyi/Personal/TSDF/catkin_ws/src/Datasets/rgbd_dataset_freiburg3_walking_xyz.bag">
+    <node name="Dataset" pkg="rosbag" type="play" output="screen" args="--clock --delay 5 /home/buyi/Personal/TSDF/catkin_ws/src/Datasets/rgbd_dataset_freiburg3_walking_static.bag">
 
     </node>
 
@@ -18,7 +18,8 @@
         <param name="use_color" value="true"/>
         <param name="carving_dist_m" value="0.05"/>
         <param name="voxel_resolution_m" value="0.02"/>
-        <param name="far_plane_dist" value="2"/>
+        <param name="far_plane_dist" value="3"/>
+        <param name="near_plane_dist" value="0.01"/>
         <param name="base_transform" value="/world"/>
         <param name="depth_image_transform" value="/openni_depth_optical_frame"/>
         <param name="color_image_transform" value="/openni_rgb_optical_frame"/>

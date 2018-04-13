@@ -35,6 +35,8 @@
 #include <open_chisel/weighting/Weighter.h>
 #include <iostream>
 
+#include "omp.h"
+
 namespace chisel
 {
 
@@ -146,6 +148,8 @@ namespace chisel
                     std::vector<int> State_flag;
                     State_flag.clear();
                     //! Step2: 根据论文算法1求取截断距离函数
+                    omp_set_num_threads(4);
+                #pragma omp parallel
                     for (size_t i = 0; i < centroids.size(); i++)
                     //parallel_for(indexes.begin(), indexes.end(), [&](const size_t& i)
                     {

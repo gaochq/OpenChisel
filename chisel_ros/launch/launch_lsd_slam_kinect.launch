@@ -13,13 +13,13 @@
         <param name="use_voxel_carving" value="true"/>
         <param name="use_color" value="true"/>
         <param name="carving_dist_m" value="0.05"/>
-        <param name="voxel_resolution_m" value="0.02"/>
+        <param name="voxel_resolution_m" value="0.03"/>
         <param name="far_plane_dist" value="2"/>
         <param name="base_transform" value="/map"/>
         <param name="depth_image_transform" value="/camera_depth_optical_frame"/>
         <param name="color_image_transform" value="/camera_rgb_optical_frame"/>
 
-        <remap from="/depth_image" to="/camera/depth_registered/image_raw"/>
+      <remap from="/depth_image" to="/camera/depth_registered/image_raw"/>
         <remap from="/depth_camera_info" to="/camera/depth_registered/camera_info"/>
         <remap from="/color_image" to="/camera/rgb/image_color"/>
         <remap from="/color_camera_info" to="/camera/rgb/camera_info"/>
